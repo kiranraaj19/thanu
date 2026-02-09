@@ -44,10 +44,3 @@ next-env.d.ts
 
 # OS
 Thumbs.db
-
-# Music files (optional - remove if you want to track them)
-/public/music/*.mp3
-/public/music/*.m4a
-/public/music/*.ogg
-/public/music/*.wav
-!/public/music/README.md
