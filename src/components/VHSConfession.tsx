@@ -16,26 +16,32 @@ export function VHSConfession({ onSectionChange }: VHSConfessionProps) {
   const [showProposal, setShowProposal] = useState(false);
   const [showError, setShowError] = useState(false);
   const [sheSaidYes, setSheSaidYes] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   
   // Audio refs
   const bgMusicRef = useRef<HTMLAudioElement | null>(null);
   const fireworksRef = useRef<HTMLAudioElement | null>(null);
   const [musicError, setMusicError] = useState(false);
 
+  // Check for mobile
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
   // Initialize audio
   useEffect(() => {
-    // Background music
     const bgMusic = new Audio("/music/our-song.mp3");
     bgMusic.loop = true;
     bgMusic.volume = 0.7;
     bgMusicRef.current = bgMusic;
 
-    // Fireworks sound
     const fireworks = new Audio("/music/fireworks.mp3");
     fireworks.volume = 0.8;
     fireworksRef.current = fireworks;
 
-    // Check if music exists
     bgMusic.addEventListener("error", () => {
       setMusicError(true);
     });
@@ -46,22 +52,18 @@ export function VHSConfession({ onSectionChange }: VHSConfessionProps) {
     };
   }, []);
 
-  // Control background music based on slideshow state
+  // Control background music
   useEffect(() => {
     if (!bgMusicRef.current || musicError) return;
 
     if (isPlaying || showProposal) {
-      // Play music when slideshow is playing or at proposal
-      bgMusicRef.current.play().catch(() => {
-        // Browser blocked autoplay
-      });
+      bgMusicRef.current.play().catch(() => {});
     } else {
-      // Pause music when slideshow is paused
       bgMusicRef.current.pause();
     }
   }, [isPlaying, showProposal, musicError]);
 
-  // Auto-advance slides when playing
+  // Auto-advance slides
   useEffect(() => {
     if (!isPlaying || showProposal) return;
 
@@ -93,49 +95,34 @@ export function VHSConfession({ onSectionChange }: VHSConfessionProps) {
 
   const handleYesClick = () => {
     setSheSaidYes(true);
-    // Play fireworks sound
     if (fireworksRef.current) {
       fireworksRef.current.play().catch(() => {});
     }
-    // Background music continues playing
   };
 
-  // VHS noise overlay component
+  // VHS noise overlay
   const VHSNoise = () => (
     <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden">
-      {/* Scanlines */}
       <div 
         className="absolute inset-0 opacity-30"
         style={{
-          background: `repeating-linear-gradient(
-            0deg,
-            transparent,
-            transparent 2px,
-            rgba(0,0,0,0.1) 2px,
-            rgba(0,0,0,0.1) 4px
-          )`,
+          background: `repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.1) 2px, rgba(0,0,0,0.1) 4px)`,
         }}
       />
-      {/* Film grain */}
       <div 
         className="absolute inset-0 opacity-20 animate-pulse"
         style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
         }}
       />
-      {/* VHS tracking lines */}
       <motion.div
-        className="absolute left-0 right-0 h-1 bg-white/20"
+        className="absolute left-0 right-0 h-0.5 sm:h-1 bg-white/20"
         animate={{ top: ["0%", "100%"] }}
         transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
       />
-      {/* Occasional glitch bars */}
       <motion.div
-        className="absolute left-0 right-0 h-8 bg-amber-900/10"
-        animate={{ 
-          top: ["10%", "80%", "30%"],
-          opacity: [0, 0.5, 0],
-        }}
+        className="absolute left-0 right-0 h-4 sm:h-8 bg-amber-900/10"
+        animate={{ top: ["10%", "80%", "30%"], opacity: [0, 0.5, 0] }}
         transition={{ duration: 0.2, repeat: Infinity, repeatDelay: 5 }}
       />
     </div>
@@ -144,34 +131,22 @@ export function VHSConfession({ onSectionChange }: VHSConfessionProps) {
   // Film frame border
   const FilmFrame = () => (
     <div className="absolute inset-0 pointer-events-none z-20">
-      {/* Top and bottom film strips */}
-      <div className="absolute top-0 left-0 right-0 h-12 md:h-16 bg-black flex">
+      <div className="absolute top-0 left-0 right-0 h-8 sm:h-12 md:h-16 bg-black flex">
         {Array.from({ length: 20 }).map((_, i) => (
           <div key={`top-${i}`} className="flex-1 border-r border-amber-900/30">
-            <div className="h-4 md:h-5 bg-amber-900/20 m-1 rounded-sm" />
+            <div className="h-2 sm:h-4 md:h-5 bg-amber-900/20 m-0.5 sm:m-1 rounded-sm" />
           </div>
         ))}
       </div>
-      <div className="absolute bottom-0 left-0 right-0 h-12 md:h-16 bg-black flex">
+      <div className="absolute bottom-0 left-0 right-0 h-8 sm:h-12 md:h-16 bg-black flex">
         {Array.from({ length: 20 }).map((_, i) => (
           <div key={`bottom-${i}`} className="flex-1 border-r border-amber-900/30">
-            <div className="h-4 md:h-5 bg-amber-900/20 m-1 rounded-sm" />
+            <div className="h-2 sm:h-4 md:h-5 bg-amber-900/20 m-0.5 sm:m-1 rounded-sm" />
           </div>
         ))}
       </div>
-      {/* Side vignette */}
-      <div 
-        className="absolute inset-y-12 md:inset-y-16 left-0 w-6 md:w-12"
-        style={{
-          background: "linear-gradient(to right, rgba(0,0,0,0.4), transparent)",
-        }}
-      />
-      <div 
-        className="absolute inset-y-12 md:inset-y-16 right-0 w-6 md:w-12"
-        style={{
-          background: "linear-gradient(to left, rgba(0,0,0,0.4), transparent)",
-        }}
-      />
+      <div className="absolute inset-y-8 sm:inset-y-12 md:inset-y-16 left-0 w-4 sm:w-6 md:w-12 bg-gradient-to-r from-black/40 to-transparent" />
+      <div className="absolute inset-y-8 sm:inset-y-12 md:inset-y-16 right-0 w-4 sm:w-6 md:w-12 bg-gradient-to-l from-black/40 to-transparent" />
     </div>
   );
 
@@ -180,28 +155,25 @@ export function VHSConfession({ onSectionChange }: VHSConfessionProps) {
     <motion.div
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="absolute top-16 md:top-20 left-0 right-0 z-30 flex justify-center gap-2 md:gap-4 px-4"
+      className="absolute top-10 sm:top-16 md:top-20 left-0 right-0 z-30 flex justify-center gap-1 sm:gap-2 md:gap-4 px-2 sm:px-4"
     >
       {[
         { id: "crossword", icon: Gamepad2, label: "Crossword" },
         { id: "music", icon: Music, label: "Music" },
-        { id: "baby", icon: Cat, label: "Our Baby" },
+        { id: "baby", icon: Cat, label: "Baby" },
         { id: "coming-soon", icon: Home, label: "Home" },
       ].map((item) => (
         <motion.button
           key={item.id}
           onClick={() => {
-            // Pause music when leaving
-            if (bgMusicRef.current) {
-              bgMusicRef.current.pause();
-            }
+            if (bgMusicRef.current) bgMusicRef.current.pause();
             onSectionChange?.(item.id);
           }}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          className="flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 rounded-full bg-black/50 text-amber-200/80 hover:bg-black/70 hover:text-amber-100 transition-colors text-xs md:text-sm"
+          className="flex items-center gap-1 px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-full bg-black/50 text-amber-200/80 hover:bg-black/70 hover:text-amber-100 transition-colors text-xs"
         >
-          <item.icon size={14} className="md:w-4 md:h-4" />
+          <item.icon size={12} className="sm:w-4 sm:h-4" />
           <span className="hidden sm:inline">{item.label}</span>
         </motion.button>
       ))}
@@ -214,31 +186,31 @@ export function VHSConfession({ onSectionChange }: VHSConfessionProps) {
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="text-center"
+          className="text-center px-2"
         >
           <motion.div
             animate={{ scale: [1, 1.2, 1] }}
             transition={{ duration: 1.5, repeat: Infinity }}
-            className="mb-6"
+            className="mb-4 sm:mb-6"
           >
-            <Heart size={120} className="text-rose-500 fill-rose-500 mx-auto drop-shadow-2xl" />
+            <Heart size={isMobile ? 80 : 120} className="text-rose-500 fill-rose-500 mx-auto drop-shadow-2xl" />
           </motion.div>
-          <h1 className="font-serif text-5xl md:text-7xl gradient-text mb-4">
+          <h1 className="font-serif text-4xl sm:text-5xl md:text-7xl gradient-text mb-3 sm:mb-4">
             She Said Yes!
           </h1>
-          <p className="font-handwritten text-2xl text-rose-700">
+          <p className="font-handwritten text-xl sm:text-2xl text-rose-700">
             Forever starts now... 💕
           </p>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8 }}
-            className="mt-6 font-serif text-xl text-rose-600/80 max-w-md mx-auto"
+            className="mt-4 sm:mt-6 font-serif text-base sm:text-xl text-rose-600/80 max-w-md mx-auto"
           >
             I promise that you will be my happiest girl
           </motion.p>
           <motion.div
-            className="mt-8 flex justify-center gap-2"
+            className="mt-6 sm:mt-8 flex justify-center gap-1 sm:gap-2"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
@@ -250,20 +222,16 @@ export function VHSConfession({ onSectionChange }: VHSConfessionProps) {
                 animate={{ scale: 1, y: 0 }}
                 transition={{ delay: 0.6 + i * 0.1 }}
               >
-                <Heart
-                  size={20 + (i % 3) * 10}
-                  className="text-rose-300 fill-rose-300"
-                />
+                <Heart size={isMobile ? 12 + (i % 3) * 6 : 20 + (i % 3) * 10} className="text-rose-300 fill-rose-300" />
               </motion.div>
             ))}
           </motion.div>
           
-          {/* Navigation after yes */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1.2 }}
-            className="mt-12 flex flex-wrap justify-center gap-3"
+            className="mt-8 sm:mt-12 flex flex-wrap justify-center gap-2 sm:gap-3"
           >
             {[
               { id: "crossword", label: "Crossword", icon: Gamepad2 },
@@ -272,15 +240,12 @@ export function VHSConfession({ onSectionChange }: VHSConfessionProps) {
             ].map((item) => (
               <motion.button
                 key={item.id}
-                onClick={() => {
-                  // Keep music playing when navigating
-                  onSectionChange?.(item.id);
-                }}
+                onClick={() => onSectionChange?.(item.id)}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="flex items-center gap-2 px-6 py-3 rounded-full bg-rose-500 text-white hover:bg-rose-600 transition-colors"
+                className="flex items-center gap-1.5 sm:gap-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-full bg-rose-500 text-white hover:bg-rose-600 transition-colors text-sm sm:text-base"
               >
-                <item.icon size={18} />
+                <item.icon size={16} className="sm:w-[18px] sm:h-[18px]" />
                 {item.label}
               </motion.button>
             ))}
@@ -292,27 +257,20 @@ export function VHSConfession({ onSectionChange }: VHSConfessionProps) {
 
   return (
     <div className="fixed inset-0 bg-black flex flex-col z-50">
-      {/* Navigation */}
       <NavigationBar />
 
-      {/* Main VHS Content */}
-      <div className="flex-1 flex items-center justify-center p-2 md:p-4">
+      <div className="flex-1 flex items-center justify-center p-1 sm:p-2 md:p-4">
         <div className="relative w-full h-full max-w-7xl">
-          {/* Main film screen */}
           <div 
             className="absolute inset-0 rounded-sm overflow-hidden"
-            style={{
-              background: "linear-gradient(135deg, #d4c4a8 0%, #c9b896 50%, #b8a080 100%)",
-            }}
+            style={{ background: "linear-gradient(135deg, #d4c4a8 0%, #c9b896 50%, #b8a080 100%)" }}
           >
             <VHSNoise />
             <FilmFrame />
 
-            {/* Content area */}
-            <div className="absolute inset-12 md:inset-16 flex flex-col items-center justify-center">
+            <div className="absolute inset-6 sm:inset-8 md:inset-12 lg:inset-16 flex flex-col items-center justify-center">
               {!showProposal ? (
                 <>
-                  {/* Slide content */}
                   <AnimatePresence mode="wait">
                     <motion.div
                       key={currentSlide}
@@ -320,18 +278,16 @@ export function VHSConfession({ onSectionChange }: VHSConfessionProps) {
                       animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                       exit={{ opacity: 0, y: -20, filter: "blur(4px)" }}
                       transition={{ duration: 0.8 }}
-                      className="text-center px-4 md:px-12 max-w-5xl"
+                      className="text-center px-2 sm:px-4 md:px-8 lg:px-12 max-w-5xl"
                     >
                       <p 
                         className={cn(
-                          "font-serif text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl leading-relaxed md:leading-relaxed",
-                          "text-amber-900",
-                          confessionSlides[currentSlide].emphasis && "font-bold text-3xl md:text-5xl lg:text-6xl xl:text-7xl"
+                          "font-serif leading-relaxed text-amber-900",
+                          confessionSlides[currentSlide].emphasis 
+                            ? "font-bold text-xl sm:text-2xl md:text-4xl lg:text-5xl xl:text-6xl" 
+                            : "text-lg sm:text-xl md:text-3xl lg:text-4xl xl:text-5xl"
                         )}
-                        style={{
-                          textShadow: "0 0 10px rgba(120, 53, 15, 0.3)",
-                          animation: "blink 2s ease-in-out infinite",
-                        }}
+                        style={{ textShadow: "0 0 10px rgba(120, 53, 15, 0.3)" }}
                       >
                         &ldquo;{confessionSlides[currentSlide].text}&rdquo;
                       </p>
@@ -339,18 +295,18 @@ export function VHSConfession({ onSectionChange }: VHSConfessionProps) {
                   </AnimatePresence>
 
                   {/* Progress indicator */}
-                  <div className="absolute bottom-4 md:bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-4">
-                    <div className="flex gap-1 md:gap-1.5">
+                  <div className="absolute bottom-2 sm:bottom-4 md:bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-2 sm:gap-4">
+                    <div className="flex gap-0.5 sm:gap-1">
                       {confessionSlides.map((_, idx) => (
                         <div
                           key={idx}
                           className={cn(
                             "rounded-full transition-all",
                             idx === currentSlide 
-                              ? "bg-amber-800 w-3 md:w-4 h-2 md:h-2.5" 
+                              ? "bg-amber-800 w-2 sm:w-3 md:w-4 h-1.5 sm:h-2" 
                               : idx < currentSlide 
-                                ? "bg-amber-600 w-2 md:w-2.5 h-2 md:h-2.5" 
-                                : "bg-amber-400/50 w-2 md:w-2.5 h-2 md:h-2.5"
+                                ? "bg-amber-600 w-1.5 sm:w-2 md:w-2.5 h-1.5 sm:h-2" 
+                                : "bg-amber-400/50 w-1.5 sm:w-2 md:w-2.5 h-1.5 sm:h-2"
                           )}
                         />
                       ))}
@@ -358,61 +314,57 @@ export function VHSConfession({ onSectionChange }: VHSConfessionProps) {
                   </div>
 
                   {/* Controls */}
-                  <div className="absolute bottom-4 md:bottom-8 right-4 md:right-8 flex items-center gap-2">
+                  <div className="absolute bottom-2 sm:bottom-4 md:bottom-8 right-2 sm:right-4 md:right-8 flex items-center gap-1 sm:gap-2">
                     <motion.button
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
                       onClick={() => setIsPlaying(!isPlaying)}
-                      className="p-2 md:p-3 rounded-full bg-amber-900/20 text-amber-900 hover:bg-amber-900/30"
+                      className="p-1.5 sm:p-2 md:p-3 rounded-full bg-amber-900/20 text-amber-900 hover:bg-amber-900/30"
                     >
-                      {isPlaying ? <Pause size={18} className="md:w-5 md:h-5" /> : <Play size={18} className="md:w-5 md:h-5" />}
+                      {isPlaying ? <Pause size={isMobile ? 14 : 18} /> : <Play size={isMobile ? 14 : 18} />}
                     </motion.button>
                     <motion.button
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
                       onClick={handleNext}
-                      className="p-2 md:p-3 rounded-full bg-amber-900/20 text-amber-900 hover:bg-amber-900/30"
+                      className="p-1.5 sm:p-2 md:p-3 rounded-full bg-amber-900/20 text-amber-900 hover:bg-amber-900/30"
                     >
-                      <SkipForward size={18} className="md:w-5 md:h-5" />
+                      <SkipForward size={isMobile ? 14 : 18} />
                     </motion.button>
                   </div>
 
                   {/* Slide counter */}
-                  <div className="absolute bottom-4 md:bottom-8 left-4 md:left-8 text-amber-800/60 font-mono text-xs md:text-sm">
+                  <div className="absolute bottom-2 sm:bottom-4 md:bottom-8 left-2 sm:left-4 md:left-8 text-amber-800/60 font-mono text-xs">
                     {String(currentSlide + 1).padStart(2, "0")} / {String(confessionSlides.length).padStart(2, "0")}
                   </div>
                 </>
               ) : (
-                /* Proposal Section */
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="text-center px-4"
+                  className="text-center px-2 sm:px-4"
                 >
                   <motion.div
                     animate={{ scale: [1, 1.1, 1] }}
                     transition={{ duration: 2, repeat: Infinity }}
-                    className="mb-6 md:mb-8"
+                    className="mb-4 sm:mb-6 md:mb-8"
                   >
-                    <Heart size={56} className="md:w-20 md:h-20 text-rose-700 fill-rose-700 mx-auto" />
+                    <Heart size={isMobile ? 40 : 56} className="md:w-20 md:h-20 text-rose-700 fill-rose-700 mx-auto" />
                   </motion.div>
                   
                   <h2 
-                    className="font-serif text-2xl sm:text-3xl md:text-5xl lg:text-6xl text-amber-900 mb-6 md:mb-10"
-                    style={{
-                      textShadow: "0 0 15px rgba(120, 53, 15, 0.4)",
-                      animation: "blink 2s ease-in-out infinite",
-                    }}
+                    className="font-serif text-xl sm:text-2xl md:text-5xl lg:text-6xl text-amber-900 mb-4 sm:mb-6 md:mb-10"
+                    style={{ textShadow: "0 0 15px rgba(120, 53, 15, 0.4)" }}
                   >
                     Thanusha, will you be my girlfriend?
                   </h2>
 
-                  <div className="flex flex-col sm:flex-row items-center justify-center gap-4 md:gap-6">
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 md:gap-6">
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={handleYesClick}
-                      className="px-8 md:px-10 py-3 md:py-4 bg-rose-600 text-white font-semibold rounded-full shadow-lg hover:bg-rose-700 transition-colors text-lg"
+                      className="px-6 sm:px-8 md:px-10 py-2.5 sm:py-3 md:py-4 bg-rose-600 text-white font-semibold rounded-full shadow-lg hover:bg-rose-700 transition-colors text-base sm:text-lg"
                     >
                       Yes 💕
                     </motion.button>
@@ -422,21 +374,20 @@ export function VHSConfession({ onSectionChange }: VHSConfessionProps) {
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={handleNoClick}
-                        className="px-8 md:px-10 py-3 md:py-4 bg-amber-800/20 text-amber-900 font-semibold rounded-full hover:bg-amber-800/30 transition-colors text-lg"
+                        className="px-6 sm:px-8 md:px-10 py-2.5 sm:py-3 md:py-4 bg-amber-800/20 text-amber-900 font-semibold rounded-full hover:bg-amber-800/30 transition-colors text-base sm:text-lg"
                       >
                         No
                       </motion.button>
                       
-                      {/* Error popup */}
                       <AnimatePresence>
                         {showError && (
                           <motion.div
                             initial={{ opacity: 0, y: 10, scale: 0.9 }}
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, y: -10, scale: 0.9 }}
-                            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-4 py-2 bg-red-600 text-white text-sm rounded-lg whitespace-nowrap flex items-center gap-2"
+                            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-red-600 text-white text-xs sm:text-sm rounded-lg whitespace-nowrap flex items-center gap-1.5 sm:gap-2"
                           >
-                            <AlertCircle size={16} />
+                            <AlertCircle size={14} />
                             You are doing wrong
                             <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-red-600" />
                           </motion.div>
@@ -448,19 +399,16 @@ export function VHSConfession({ onSectionChange }: VHSConfessionProps) {
               )}
             </div>
 
-            {/* VHS timestamp overlay */}
-            <div className="absolute top-16 md:top-20 left-4 md:left-6 font-mono text-amber-900/40 text-xs md:text-sm">
+            {/* VHS timestamp */}
+            <div className="absolute top-10 sm:top-16 md:top-20 left-2 sm:left-4 md:left-6 font-mono text-amber-900/40 text-xs">
               REC ● 00:{String(Math.floor(currentSlide * 4)).padStart(2, "0")}:00
             </div>
 
             {/* Music indicator */}
             {!musicError && (isPlaying || showProposal) && (
-              <div className="absolute top-16 md:top-20 right-4 md:right-6 flex items-center gap-2 text-amber-900/40 text-xs md:text-sm">
-                <motion.div
-                  animate={{ scale: [1, 1.2, 1] }}
-                  transition={{ duration: 1, repeat: Infinity }}
-                >
-                  <Heart size={12} className="fill-amber-900/40" />
+              <div className="absolute top-10 sm:top-16 md:top-20 right-2 sm:right-4 md:right-6 flex items-center gap-1 sm:gap-2 text-amber-900/40 text-xs">
+                <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 1, repeat: Infinity }}>
+                  <Heart size={10} className="fill-amber-900/40" />
                 </motion.div>
                 <span className="hidden sm:inline">♪ Playing</span>
               </div>
@@ -468,14 +416,6 @@ export function VHSConfession({ onSectionChange }: VHSConfessionProps) {
           </div>
         </div>
       </div>
-
-      {/* Blink animation */}
-      <style jsx global>{`
-        @keyframes blink {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.85; }
-        }
-      `}</style>
     </div>
   );
 }
