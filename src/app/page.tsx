@@ -1,101 +1,136 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Header } from "@/components/Header";
+import { CrosswordGame } from "@/components/CrosswordGame";
+import { ComingSoon } from "@/components/ComingSoon";
+import { VHSConfession } from "@/components/VHSConfession";
+import { OurMusic } from "@/components/OurMusic";
+import { OurBaby } from "@/components/OurBaby";
+import { LockScreen } from "@/components/LockScreen";
+import { FloatingHearts } from "@/components/FloatingHearts";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [activeSection, setActiveSection] = useState("crossword");
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+  // Sections that need the romantic background and header
+  const romanticSections = ["crossword", "coming-soon"];
+  const hideHeaderSections = ["confession", "music", "baby"];
+  const showHearts = romanticSections.includes(activeSection);
+  const showHeader = !hideHeaderSections.includes(activeSection);
+  const showPadding = showHeader;
+
+  // Show lock screen if not unlocked
+  if (!isUnlocked) {
+    return (
+      <AnimatePresence mode="wait">
+        <motion.div
+          key="lockscreen"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
         >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+          <LockScreen onUnlock={() => setIsUnlocked(true)} />
+        </motion.div>
+      </AnimatePresence>
+    );
+  }
+
+  return (
+    <main className="min-h-screen relative overflow-hidden">
+      {/* Floating hearts background - only for romantic sections */}
+      {showHearts && <FloatingHearts />}
+
+      {/* Header - hide for full-screen sections */}
+      {showHeader && (
+        <Header
+          activeSection={activeSection}
+          onSectionChange={setActiveSection}
+        />
+      )}
+
+      {/* Main content */}
+      <div className={showPadding ? "pt-20 md:pt-24" : ""}>
+        <AnimatePresence mode="wait">
+          {activeSection === "crossword" && (
+            <motion.section
+              key="crossword"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.4 }}
+              className="relative z-10"
+            >
+              <CrosswordGame />
+            </motion.section>
+          )}
+
+          {activeSection === "confession" && (
+            <motion.section
+              key="confession"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.4 }}
+            >
+              <VHSConfession onSectionChange={setActiveSection} />
+            </motion.section>
+          )}
+
+          {activeSection === "music" && (
+            <motion.section
+              key="music"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.4 }}
+            >
+              <OurMusic onSectionChange={setActiveSection} />
+            </motion.section>
+          )}
+
+          {activeSection === "baby" && (
+            <motion.section
+              key="baby"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.4 }}
+            >
+              <OurBaby onSectionChange={setActiveSection} />
+            </motion.section>
+          )}
+
+          {activeSection === "coming-soon" && (
+            <motion.section
+              key="coming-soon"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.4 }}
+              className="relative z-10"
+            >
+              <ComingSoon />
+            </motion.section>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Footer - hide for full-screen sections */}
+      {showHeader && (
+        <motion.footer
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1 }}
+          className="relative z-10 py-8 text-center"
         >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+          <p className="text-rose-950/40 text-sm font-sans">
+            Made with endless love 💕
+          </p>
+        </motion.footer>
+      )}
+    </main>
   );
 }
